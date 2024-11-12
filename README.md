@@ -1,5 +1,5 @@
 # spy-cats
-# Library
+
 
 Description
 ---
