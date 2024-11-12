@@ -407,3 +407,4 @@ CACHED/
 exporting/
 identifier.sqlite
 .DS_Store
+migrations/

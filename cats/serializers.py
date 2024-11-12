@@ -1,11 +1,16 @@
 import requests
-
 from rest_framework import serializers
 
 from cats.models import SpyCat, Mission, Target
 
 
 class SpyCatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpyCat
+        fields = "__all__"
+
+
+class SpyCatListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpyCat
         fields = "__all__"
@@ -20,7 +25,9 @@ class SpyCatSerializer(serializers.ModelSerializer):
 
         breeds = response.json()
         if not breeds:
-            raise serializers.ValidationError(f"The breed '{value}' is not recognized.")
+            raise serializers.ValidationError(
+                f"The breed '{value}' is not recognized."
+            )
 
         return value
 
@@ -30,9 +37,35 @@ class TargetSerializer(serializers.ModelSerializer):
         model = Target
         fields = "__all__"
 
+    def validate(self, attrs):
+        if attrs.get('is_complete'):
+            raise serializers.ValidationError(
+                "Cannot create or update a target as complete."
+            )
+        return attrs
+
+    def create(self, validated_data):
+        return Target.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.mission = validated_data.get('mission', instance.mission)
+        instance.name = validated_data.get('name', instance.name)
+        instance.country = validated_data.get('country', instance.country)
+        instance.notes = validated_data.get('notes', instance.notes)
+        instance.is_complete = validated_data.get(
+            'is_complete',
+            instance.is_complete
+        )
+        instance.save()
+        return instance
+
 
 class MissionSerializer(serializers.ModelSerializer):
     targets = TargetSerializer(many=True)
+    spycat = serializers.PrimaryKeyRelatedField(
+        queryset=SpyCat.objects.all(),
+        allow_null=True
+    )
 
     class Meta:
         model = Mission
@@ -44,3 +77,27 @@ class MissionSerializer(serializers.ModelSerializer):
         for target_data in targets_data:
             Target.objects.create(mission=mission, **target_data)
         return mission
+
+    def update(self, instance, validated_data):
+        targets_data = validated_data.pop('targets', [])
+        instance.cat = validated_data.get('cat', instance.cat)
+        instance.is_complete = validated_data.get(
+            'is_complete',
+            instance.is_complete
+        )
+        instance.save()
+
+        for target_data in targets_data:
+            target_id = target_data.get('id')
+            if target_id:
+                target = Target.objects.get(id=target_id, mission=instance)
+                if not target.is_complete:
+                    target.notes = target_data.get('notes', target.notes)
+                target.is_complete = target_data.get(
+                    'is_complete',
+                    target.is_complete
+                )
+                target.save()
+            else:
+                Target.objects.create(mission=instance, **target_data)
+        return instance

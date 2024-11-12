@@ -4,10 +4,26 @@ from rest_framework.routers import DefaultRouter
 from cats.views import SpyCatViewSet, MissionViewSet, TargetViewSet
 
 router = DefaultRouter()
-router.register(r'spycats', SpyCatViewSet)
+router.register(r'cats', SpyCatViewSet)
 router.register(r'missions', MissionViewSet)
 router.register(r'targets', TargetViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path(
+        'missions/<int:pk>/assign-cat/',
+        MissionViewSet.as_view({'post': 'assign_cat'}),
+        name='assign-cat'
+    ),
+    path(
+        'targets/<int:pk>/',
+        TargetViewSet.as_view(
+            {'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}),
+        name='target-detail'
+    ),
+    path(
+        'targets/<int:pk>/complete/',
+        TargetViewSet.as_view({'post': 'mark_complete'}),
+        name='mark-target-complete'
+    ),
 ]
