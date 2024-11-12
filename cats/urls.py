@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
 from cats.views import SpyCatViewSet, MissionViewSet, TargetViewSet
 
 router = DefaultRouter()
