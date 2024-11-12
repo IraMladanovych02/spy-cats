@@ -53,3 +53,8 @@ A project for efficient management of spying work processes
 - **email: user@user.com**
 - ---
 - **password: user123456789**
+
+# Documantation
+
+Due to time constraints, I was unable to add all the endpoints to Postman. But I`ve implemented Swagger to create documentation automatically.
+To check the documentation please run server and enter the following url: http://127.0.0.1:8000/api/doc/swagger/
